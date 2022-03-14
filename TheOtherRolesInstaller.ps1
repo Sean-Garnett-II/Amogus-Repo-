@@ -9,29 +9,34 @@ Get-ChildItem -Path .\ -Filter "*The Other Roles*" | ForEach-Object {
     $nextName = Join-Path -Path $dest -ChildPath $PSItem.name
     while(Test-Path -Path $nextName)
     {
-       $nextName = Join-Path $dest ($PSItem.BaseName + "_$num" + $PSItem.Extension)    
+       $nextName = Join-Path $dest ($PSItem.BaseName + " ($num)")    
        $num+=1   
     }
     $PSItem | Move-Item -Destination $nextName
 }
 
-cmd.exe /c curl https://api.github.com/repos/Eisbison/TheOtherRoles/releases/latest >TheOtherRoles.txt
-if(!($?)){ echo "Failed getting Mod info"; pause; exit }
+cmd.exe /c curl https://api.github.com/repos/Eisbison/TheOtherRoles/releases/latest >TheOtherRoles.json
+#if(!($?)){ echo "Failed getting Mod info"; pause; exit }
+if ((Get-Content TheOtherRoles.json) -eq $Null) { echo "Failed getting Mod info"; pause; exit }
 
-$downloadUrl = Select-String -Path TheOtherRoles.txt -Pattern 'browser_download_url'
+# $downloadUrl = Get-Content TheOtherRoles.json | ConvertFrom-Json | Select-Object -ExpandProperty assets | Select-Object -ExpandProperty browser_download_url
+# unfortunately returns 2 urls and deciding which one is just as complicated as the implementation below. 
+$downloadUrl = Select-String -Path TheOtherRoles.json -Pattern 'browser_download_url'
 $downloadUrl = [regex]::Matches($downloadUrl, 'https:[\/\w\.\d-]+zip').Value
 if(!($downloadUrl)){ echo "Failed getting download link"; pause; exit }
 
-$folderName = Select-String -Path TheOtherRoles.txt -Pattern '"name"[ ]?:[ ]?"The Other Roles '
+$folderName = Select-String -Path TheOtherRoles.json -Pattern '"name"[ ]?:[ ]?"The Other Roles '
 $folderName = [regex]::Matches($folderName, 'The Other Roles [\w\d.]+').Value
 if(!($folderName)){ $folderName = "The Other Roles unknown version" }
 New-Item -Path $folderName -ItemType Directory -Force
 
 cmd.exe /c curl -Lo TheOtherRoles.zip $downloadUrl
-if(!($?)){ echo "Failed Downloading Mod zip file"; pause; exit }
+#if(!($?)){ echo "Failed Downloading Mod zip file"; pause; exit }
+if ((Get-Content TheOtherRoles.zip) -eq $Null) { echo "Failed Downloading Mod zip file"; pause; exit }
 
-Expand-archive .\TheOtherRoles.zip -destinationpath $folderName
-if(!($?)){ echo "Failed unzipping Mod file"; pause; exit }
+Expand-archive .\TheOtherRoles.zip -destinationpath $folderName -Force
+#if(!($?)){ echo "Failed unzipping Mod file"; pause; exit }
+#if (!(Test-Path -Path .\TheOtherRoles\*)) { echo "Failed unzipping Mod file"; pause; exit }
 
 if(Test-Path -Path .\TheOtherRoles.*) { Remove-Item -Path .\TheOtherRoles.* }
 
