@@ -13,10 +13,10 @@ Get-ChildItem -Path .\ -Filter "*The Other Roles*" | ForEach-Object {
     $PSItem | Move-Item -Destination $nextName
 }
 cmd.exe /c curl https://api.github.com/repos/Eisbison/TheOtherRoles/releases/latest >TheOtherRoles.txt
-if(!($?)){ echo "Failed gathering Mod info"; pause; exit }
+if(!($?)){ echo "Failed getting Mod info"; pause; exit }
 $downloadUrl = Select-String -Path TheOtherRoles.txt -Pattern 'browser_download_url'
 $downloadUrl = [regex]::Matches($downloadUrl, 'https:[\/\w\.\d-]+zip').Value
-if(!($downloadUrl)){ echo "Failed gathering download link"; pause; exit }
+if(!($downloadUrl)){ echo "Failed getting download link"; pause; exit }
 $folderName = Select-String -Path TheOtherRoles.txt -Pattern '"name"[ ]?:[ ]?"The Other Roles '
 $folderName = [regex]::Matches($folderName, 'The Other Roles [\w\d.]+').Value
 if(!($folderName)){ $folderName = "The Other Roles unknown version"}
