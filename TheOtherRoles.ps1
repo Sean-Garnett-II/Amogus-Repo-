@@ -4,13 +4,13 @@ New-Item -Path .\"Previous Versions\The Other Roles" -ItemType Directory -Force
 $dest = ".\Previous Versions\The Other Roles"
 Get-ChildItem -Path .\ -Filter "*The Other Roles*" | ForEach-Object {
     $num=1
-    $nextName = Join-Path -Path $dest -ChildPath $_.name
+    $nextName = Join-Path -Path $dest -ChildPath $PSItem.name
     while(Test-Path -Path $nextName)
     {
-       $nextName = Join-Path $dest ($_.BaseName + "_$num" + $_.Extension)    
+       $nextName = Join-Path $dest ($PSItem.BaseName + "_$num" + $PSItem.Extension)    
        $num+=1   
     }
-    $_ | Move-Item -Destination $nextName
+    $PSItem | Move-Item -Destination $nextName
 }
 cmd.exe /c curl https://api.github.com/repos/Eisbison/TheOtherRoles/releases/latest >TheOtherRoles.txt
 if(!($?)){ echo "Failed gathering Mod info"; pause; exit }
