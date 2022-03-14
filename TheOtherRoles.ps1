@@ -1,7 +1,17 @@
 if(Test-Path -Path .\TheOtherRoles.*) {Remove-Item -Path .\TheOtherRoles.*}
 New-Item -Path .\"Previous Versions" -ItemType Directory -Force
 New-Item -Path .\"Previous Versions\The Other Roles" -ItemType Directory -Force
-Get-ChildItem -Path .\ -Filter "*The Other Roles*" | Select-Object -ExpandProperty Name | Move-Item -Destination .\"Previous Versions\The Other Roles"
+$dest = ".\Previous Versions\The Other Roles"
+Get-ChildItem -Path .\ -Filter "*The Other Roles*" | ForEach-Object {
+    $num=1
+    $nextName = Join-Path -Path $dest -ChildPath $_.name
+    while(Test-Path -Path $nextName)
+    {
+       $nextName = Join-Path $dest ($_.BaseName + "_$num" + $_.Extension)    
+       $num+=1   
+    }
+    $_ | Move-Item -Destination $nextName
+}
 cmd.exe /c curl https://api.github.com/repos/Eisbison/TheOtherRoles/releases/latest >TheOtherRoles.txt
 if(!($?)){ echo "Failed gathering Mod info"; pause; exit }
 $downloadUrl = Select-String -Path TheOtherRoles.txt -Pattern 'browser_download_url'
@@ -10,9 +20,6 @@ if(!($downloadUrl)){ echo "Failed gathering download link"; pause; exit }
 $folderName = Select-String -Path TheOtherRoles.txt -Pattern '"name"[ ]?:[ ]?"The Other Roles '
 $folderName = [regex]::Matches($folderName, 'The Other Roles [\w\d.]+').Value
 if(!($folderName)){ $folderName = "The Other Roles unknown version"}
-if(Test-Path -Path $folderName){
-    Remove-Item $folderName -Recurse
-}
 New-Item -Path $folderName -ItemType Directory -Force
 cmd.exe /c curl -Lo TheOtherRoles.zip $downloadUrl
 if(!($?)){ echo "Failed Downloading Mod zip file"; pause; exit }
@@ -24,7 +31,7 @@ if(Test-Path -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\St
     if (Test-Path -Path $installPath) {
         robocopy $installPath $folderName /e 
         start $folderName
-    }
+    } else { echo "Failed copying from Steam Install location. Looking for 'Among Us' in this directory"; Start-Sleep 10 }
 } elseif (Test-Path -Path .\"Among Us"){
     robocopy .\"Among Us" $folderName /e /move
     start $folderName
@@ -32,3 +39,4 @@ if(Test-Path -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\St
     echo "Copy your Among Us instillation folder into this folder as 'Among Us' and re-run this script"
     pause
 }
+exit
