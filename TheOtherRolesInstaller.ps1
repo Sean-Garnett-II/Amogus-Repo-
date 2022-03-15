@@ -3,7 +3,7 @@ $modNameFolders = "The Other Roles"
 $modNameFiles = $modNameFolders
 $modNameFiles = $modNameFiles -replace '\s', ''
 
-# Clean up old temp files
+# Clean up old temp files, if any
 if(Test-Path -Path .\$modNameFiles.*) {Remove-Item -Path .\$modNameFiles.*}
 
 New-Item -Path .\"Previous Versions" -ItemType Directory -Force
@@ -23,7 +23,6 @@ Get-ChildItem -Path .\ -Filter "*$modNameFolders*" | ForEach-Object {
 
 cmd.exe /c curl $gitApiUrl >"$modNameFiles.json"
 $jsonData = Get-Content "$modNameFiles.json" | ConvertFrom-Json
-#if(!($?)){ echo "Failed getting Mod info"; pause; exit }
 if (!$jsonData) { echo "Failed getting Mod info"; pause; exit }
 
 # getting download url and folderName using ConvertFrom-Json
@@ -49,7 +48,6 @@ if(!($folderName)){ $folderName = "The Other Roles unknown version" }
 New-Item -Path $folderName -ItemType Directory -Force
 
 cmd.exe /c curl -Lo "$modNameFiles.zip" $downloadUrl
-#if(!($?)){ echo "Failed Downloading Mod zip file"; pause; exit }
 if ((Get-Content "$modNameFiles.zip") -eq $Null) { echo "Failed Downloading Mod zip file"; pause; exit }
 
 Expand-Archive -Path .\"$modNameFiles.zip" -DestinationPath $folderName -Force
