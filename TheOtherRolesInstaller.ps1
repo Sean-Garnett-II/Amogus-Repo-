@@ -19,14 +19,25 @@ cmd.exe /c curl https://api.github.com/repos/Eisbison/TheOtherRoles/releases/lat
 #if(!($?)){ echo "Failed getting Mod info"; pause; exit }
 if ((Get-Content TheOtherRoles.json) -eq $Null) { echo "Failed getting Mod info"; pause; exit }
 
-# $downloadUrl = Get-Content TheOtherRoles.json | ConvertFrom-Json | Select-Object -ExpandProperty assets | Select-Object -ExpandProperty browser_download_url
-# unfortunately returns 2 urls and deciding which one is just as complicated as the implementation below. 
-$downloadUrl = Select-String -Path TheOtherRoles.json -Pattern 'browser_download_url'
-$downloadUrl = [regex]::Matches($downloadUrl, 'https:[\/\w\.\d-]+zip').Value
+# getting download url and folderName using ConvertFrom-Json
+foreach ($content in $jsonData.assets) { 
+
+    $name = $content.name
+
+    if($name -match '[\w.]+zip'){
+
+        if(!$shortestName){ $shortestName = $name }
+        if(!$downloadUrl){ $downloadUrl = $content.browser_download_url }
+
+        if($name -lt $shortestName){ 
+        $shortestName = $name
+        $downloadUrl = $content.browser_download_url
+         }
+    }
+}
 if(!($downloadUrl)){ echo "Failed getting download link"; pause; exit }
 
-$folderName = Select-String -Path TheOtherRoles.json -Pattern '"name"[ ]?:[ ]?"The Other Roles '
-$folderName = [regex]::Matches($folderName, 'The Other Roles [\w\d.]+').Value
+$folderName = $shortestName
 if(!($folderName)){ $folderName = "The Other Roles unknown version" }
 New-Item -Path $folderName -ItemType Directory -Force
 
