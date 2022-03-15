@@ -1,23 +1,30 @@
-if(Test-Path -Path .\TheOtherRoles.*) {Remove-Item -Path .\TheOtherRoles.*}
+$gitApiUrl = "https://api.github.com/repos/Eisbison/TheOtherRoles/releases/latest"
+$modNameFolders = "The Other Roles"
+$modNameFiles = $modNameFolders
+$modNameFiles = $modNameFiles -replace '\s', ''
+
+# Clean up old temp files
+if(Test-Path -Path .\$modNameFiles.*) {Remove-Item -Path .\$modNameFiles.*}
 
 New-Item -Path .\"Previous Versions" -ItemType Directory -Force
-New-Item -Path .\"Previous Versions\The Other Roles" -ItemType Directory -Force
+New-Item -Path .\"Previous Versions\$modNameFolders" -ItemType Directory -Force
 
-$dest = ".\Previous Versions\The Other Roles"
-Get-ChildItem -Path .\ -Filter "*The Other Roles*" | ForEach-Object {
+$archiveName = ".\Previous Versions\$modNameFolders"
+Get-ChildItem -Path .\ -Filter "*$modNameFolders*" | ForEach-Object {
     $num=1
-    $nextName = Join-Path -Path $dest -ChildPath $PSItem.name
+    $nextName = Join-Path -Path $archiveName -ChildPath $PSItem.name
     while(Test-Path -Path $nextName)
     {
-       $nextName = Join-Path $dest ($PSItem.BaseName + " ($num)")    
+       $nextName = Join-Path $archiveName ($PSItem.BaseName + " ($num)")    
        $num+=1   
     }
     $PSItem | Move-Item -Destination $nextName
 }
 
-cmd.exe /c curl https://api.github.com/repos/Eisbison/TheOtherRoles/releases/latest >TheOtherRoles.json
+cmd.exe /c curl $gitApiUrl >"$modNameFiles.json"
+$jsonData = Get-Content "$modNameFiles.json" | ConvertFrom-Json
 #if(!($?)){ echo "Failed getting Mod info"; pause; exit }
-if ((Get-Content TheOtherRoles.json) -eq $Null) { echo "Failed getting Mod info"; pause; exit }
+if (!$jsonData) { echo "Failed getting Mod info"; pause; exit }
 
 # getting download url and folderName using ConvertFrom-Json
 foreach ($content in $jsonData.assets) { 
@@ -41,11 +48,11 @@ $folderName = $shortestName
 if(!($folderName)){ $folderName = "The Other Roles unknown version" }
 New-Item -Path $folderName -ItemType Directory -Force
 
-cmd.exe /c curl -Lo TheOtherRoles.zip $downloadUrl
+cmd.exe /c curl -Lo "$modNameFiles.zip" $downloadUrl
 #if(!($?)){ echo "Failed Downloading Mod zip file"; pause; exit }
-if ((Get-Content TheOtherRoles.zip) -eq $Null) { echo "Failed Downloading Mod zip file"; pause; exit }
+if ((Get-Content "$modNameFiles.zip") -eq $Null) { echo "Failed Downloading Mod zip file"; pause; exit }
 
-Expand-Archive -Path .\TheOtherRoles.zip -DestinationPath $folderName -Force
+Expand-Archive -Path .\"$modNameFiles.zip" -DestinationPath $folderName -Force
 # if the unziped folder has 1 folder it will move the contents of that folder into .\
 $count = ( Get-ChildItem .\$folderName | Measure-Object ).Count
 if ($count -eq 1){
@@ -55,7 +62,8 @@ if ($count -eq 1){
     cd..
 }
 
-if(Test-Path -Path .\TheOtherRoles.*) { Remove-Item -Path .\TheOtherRoles.* }
+# Clean up Temp Files
+if(Test-Path -Path .\$modNameFiles.*) { Remove-Item -Path .\$modNameFiles.* }
 
 if(Test-Path -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 945360'){
     $installPath = Get-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 945360' | select-object -ExpandProperty InstallLocation
