@@ -45,9 +45,15 @@ cmd.exe /c curl -Lo TheOtherRoles.zip $downloadUrl
 #if(!($?)){ echo "Failed Downloading Mod zip file"; pause; exit }
 if ((Get-Content TheOtherRoles.zip) -eq $Null) { echo "Failed Downloading Mod zip file"; pause; exit }
 
-Expand-archive .\TheOtherRoles.zip -destinationpath $folderName -Force
-#if(!($?)){ echo "Failed unzipping Mod file"; pause; exit }
-#if (!(Test-Path -Path .\TheOtherRoles\*)) { echo "Failed unzipping Mod file"; pause; exit }
+Expand-Archive -Path .\TheOtherRoles.zip -DestinationPath $folderName -Force
+# if the unziped folder has 1 folder it will move the contents of that folder into .\
+$count = ( Get-ChildItem .\$folderName | Measure-Object ).Count
+if ($count -eq 1){
+    cd $folderName
+    $cdFolder = (Get-childitem -path .\ | select-object -expandProperty Name)
+    robocopy .\$cdFolder .\ /e /move
+    cd..
+}
 
 if(Test-Path -Path .\TheOtherRoles.*) { Remove-Item -Path .\TheOtherRoles.* }
 
