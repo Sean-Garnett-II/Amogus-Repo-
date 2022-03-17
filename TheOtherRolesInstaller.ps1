@@ -43,7 +43,7 @@ foreach ($content in $jsonData.assets) {
 }
 if(!($downloadUrl)){ echo "Failed getting download link"; pause; exit }
 
-$folderName = $shortestName
+$folderName = $jsonData.name
 if(!($folderName)){ $folderName = "The Other Roles unknown version" }
 New-Item -Path $folderName -ItemType Directory -Force
 
